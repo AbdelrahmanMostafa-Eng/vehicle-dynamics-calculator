@@ -299,3 +299,78 @@ class TireLimits:
             "max_force_at_angle": max_force
         }
 
+
+def quick_limit_check(mu_x: float, mu_y: float, Fz: float, 
+                     Fx: float, Fy: float, model: str = "ellipse") -> Dict[str, Union[bool, float]]:
+    """Simplified API for quick calculations."""
+    if Fz <= 0:
+        raise ValueError(f"Vertical load must be positive, got {Fz}N")
+    if mu_x <= 0:
+        raise ValueError(f"Longitudinal friction μx must be positive, got {mu_x}")
+    if mu_y <= 0:
+        raise ValueError(f"Lateral friction μy must be positive, got {mu_y}")
+    
+    Fx_max = mu_x * Fz
+    Fy_max = mu_y * Fz
+    
+    if abs(Fx_max) < 1e-9:
+        fx_ratio_sq = float('inf') if abs(Fx) > 1e-9 else 0.0
+    else:
+        fx_ratio_sq = (Fx / Fx_max) ** 2
+    
+    if abs(Fy_max) < 1e-9:
+        fy_ratio_sq = float('inf') if abs(Fy) > 1e-9 else 0.0
+    else:
+        fy_ratio_sq = (Fy / Fy_max) ** 2
+    
+    if fx_ratio_sq == float('inf') or fy_ratio_sq == float('inf'):
+        usage = float('inf')
+        within = False
+    else:
+        usage_sq = fx_ratio_sq + fy_ratio_sq
+        usage = math.sqrt(usage_sq)
+        within = usage_sq <= 1.0
+    
+    return {
+        "within_limit": within,
+        "usage": usage,
+        "model": model,
+        "Fx_max": Fx_max,
+        "Fy_max": Fy_max
+    }
+
+
+# Example usage
+if __name__ == "__main__":
+    # Test with realistic scenario
+    tire = TireState(
+        vertical_load=3500,
+        slip_ratio=0.05,
+        slip_angle=math.radians(5),
+        temperature=85.0,
+        wear=0.2,
+        pressure=210,
+        type=TireType.PERFORMANCE
+    )
+    
+    limits = TireLimits(tire)
+    
+    print("Effective friction coefficients:")
+    mu_eff = limits.get_effective_friction()
+    for key, value in mu_eff.items():
+        if isinstance(value, float):
+            print(f"  {key}: {value:.3f}")
+    
+    print("\nForce scenario tests:")
+    test_forces = [(-3000, 500), (500, 3200), (2500, 1500), (1000, 3800)]
+    
+    for Fx, Fy in test_forces:
+        ellipse = limits.friction_ellipse_limit(Fx, Fy)
+        combined = limits.combined_slip_limit(Fx, Fy)
+        stability = limits.stability_assessment(Fx, Fy)
+        
+        print(f"\n  Fx={Fx:.0f} N, Fy={Fy:.0f} N:")
+        print(f"    Ellipse: usage={ellipse['usage']:.2f}, within_limit={ellipse['within_limit']}")
+        print(f"    Combined: usage={combined['usage']:.2f}, within_limit={combined['within_limit']}")
+        print(f"    Status: {stability['color']} {stability['status']}")
+        print(f"    Force margin: {stability['force_margin_N']:.0f} N ({stability['force_margin_%']:.0f}%)")
