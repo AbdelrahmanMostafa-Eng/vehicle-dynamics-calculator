@@ -3,6 +3,7 @@
 """
 Ground effect and ride height maps
 """
+from typing import List, Dict
 
 def ground_effect_downforce(rho: float, Cl0: float, A: float,
                             v: float, ride_height: float) -> float:
@@ -32,7 +33,7 @@ def ground_effect_downforce(rho: float, Cl0: float, A: float,
 
 
 def ride_height_map(rho: float, Cl0: float, A: float, v: float,
-                    heights: list[float]) -> dict:
+                    heights: List[float]) -> Dict[float, float]:
     """
     Generate a ride height vs downforce map.
 
@@ -41,10 +42,10 @@ def ride_height_map(rho: float, Cl0: float, A: float, v: float,
         Cl0 (float): Base lift coefficient
         A (float): Reference area [m^2]
         v (float): Vehicle speed [m/s]
-        heights (list): List of ride heights [m]
+        (List[float]): List of ride heights [m]
 
     Returns:
-        dict: {height: downforce}
+        Dict[float, float]: {height: downforce}
     """
     return {h: ground_effect_downforce(rho, Cl0, A, v, h) for h in heights}
 
