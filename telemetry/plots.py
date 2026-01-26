@@ -1,15 +1,36 @@
 #plots.py
 
 """
-Telemetry visualization with matplotlib
+Standalone telemetry visualization
 """
 
+import random
 import matplotlib.pyplot as plt
 
+# ---------------- Telemetry generator ----------------
+def generate_lap_data(laps: int, lap_distance: float) -> list:
+    """
+    Generate synthetic telemetry data for multiple laps.
+    """
+    data = []
+    for lap in range(1, laps + 1):
+        avg_speed = random.uniform(60, 70)  # m/s
+        lap_time = lap_distance / avg_speed
+        fuel_used = random.uniform(2.3, 2.7)  # kg
+        tire_wear = random.uniform(0.01, 0.03) * lap
+
+        data.append({
+            "lap": lap,
+            "avg_speed": avg_speed,
+            "lap_time": lap_time,
+            "fuel_used": fuel_used,
+            "tire_wear": tire_wear
+        })
+    return data
+
+
+# ---------------- Plot functions ----------------
 def plot_lap_times(telemetry: list):
-    """
-    Plot lap times across laps.
-    """
     laps = [d["lap"] for d in telemetry]
     times = [d["lap_time"] for d in telemetry]
 
@@ -24,9 +45,6 @@ def plot_lap_times(telemetry: list):
 
 
 def plot_fuel_usage(telemetry: list):
-    """
-    Plot fuel usage per lap.
-    """
     laps = [d["lap"] for d in telemetry]
     fuel = [d["fuel_used"] for d in telemetry]
 
@@ -40,9 +58,6 @@ def plot_fuel_usage(telemetry: list):
 
 
 def plot_tire_wear(telemetry: list):
-    """
-    Plot tire wear progression.
-    """
     laps = [d["lap"] for d in telemetry]
     wear = [d["tire_wear"] for d in telemetry]
 
@@ -56,9 +71,8 @@ def plot_tire_wear(telemetry: list):
     plt.show()
 
 
-# Example usage
+# ---------------- Example run ----------------
 if __name__ == "__main__":
-    from generator import generate_lap_data
     telemetry = generate_lap_data(10, lap_distance=5300)
 
     plot_lap_times(telemetry)
