@@ -1,46 +1,44 @@
 #drag.py
 
 """
-Aerodynamic drag force calculations
+
+Module for calculating aerodynamic drag forces in Formula 1.
+Includes base drag, induced drag, and cooling drag contributions.
+
 """
 
-def drag_force(rho: float, Cd: float, A: float, v: float) -> float:
-    """
-    Calculate aerodynamic drag force.
+from dataclasses import dataclass
+import numpy as np
 
-    Parameters:
-        rho (float): Air density [kg/m^3]
-        Cd (float): Drag coefficient [-]
-        A (float): Frontal/reference area [m^2]
-        v (float): Vehicle speed [m/s]
+@dataclass
+class DragModel:
+    frontal_area: float
+    cd_base: float
+    cl_total: float
+    aspect_ratio: float
+    cooling_drag: float
 
-    Returns:
-        float: Drag force [N]
-    """
-    return 0.5 * rho * Cd * A * v**2
+    def induced_drag(self) -> float:
+        """Calculate induced drag coefficient from lift."""
+        return self.cl_total**2 / (np.pi * self.aspect_ratio)
 
+    def total_cd(self) -> float:
+        """Return total drag coefficient (base + induced)."""
+        return self.cd_base + self.induced_drag()
 
-def drag_power(Fd: float, v: float) -> float:
-    """
-    Calculate power required to overcome drag.
-
-    Parameters:
-        Fd (float): Drag force [N]
-        v (float): Vehicle speed [m/s]
-
-    Returns:
-        float: Power [W]
-    """
-    return Fd * v
+    def drag_force(self, velocity: float, rho: float) -> float:
+        """Calculate drag force (N) at given velocity (m/s)."""
+        return 0.5 * rho * velocity**2 * self.frontal_area * self.total_cd() + self.cooling_drag
 
 
 # Example usage
-if __name__ == "__main__":
-    rho = 1.225   # kg/m^3 (sea level)
-    Cd = 0.32     # typical road car; race car lower but with more downforce devices
-    A = 2.0       # m^2
-    v = 50.0      # m/s (~180 km/h)
 
-    Fd = drag_force(rho, Cd, A, v)
-    P = drag_power(Fd, v)
-    print(f"Drag force: {Fd:.1f} N, Drag power: {P/1000:.1f} kW")
+if __name__ == "__main__":
+    rho = 1.225
+    drag_model = DragModel(frontal_area=1.6, cd_base=0.9, cl_total=3.5, aspect_ratio=5.0, cooling_drag=50)
+
+    print("=== Drag Example ===")
+    for v in [100, 200, 300]:  # km/h
+        v_ms = v / 3.6
+        df = drag_model.drag_force(v_ms, rho)
+        print(f"Velocity {v} km/h → Drag Force = {df:.1f} N")
