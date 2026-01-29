@@ -1,56 +1,42 @@
 #downforce.py
 
 """
-Aerodynamic downforce calculations
+
+Module for calculating aerodynamic downforce from wing elements in Formula 1.
+Includes support for angle of attack (AoA), DRS effects, and multi-element wings.
+
 """
 
-def downforce(rho: float, Cl: float, A: float, v: float) -> float:
-    """
-    Calculate aerodynamic downforce.
+from dataclasses import dataclass
+import numpy as np
 
-    Parameters:
-        rho (float): Air density [kg/m^3]
-        Cl (float): Lift coefficient (positive for lift, negative for downforce)
-        A (float): Reference area [m^2]
-        v (float): Vehicle speed [m/s]
+@dataclass
+class WingElement:
+    area: float
+    base_cl: float
+    aoa_sensitivity: float
+    drs_effect: float
 
-    Returns:
-        float: Downforce [N]
-    """
-    return 0.5 * rho * Cl * A * v**2
+    def cl(self, aoa_deg: float, drs_active: bool = False) -> float:
+        """Calculate lift coefficient based on AoA and DRS state."""
+        cl = self.base_cl + self.aoa_sensitivity * aoa_deg
+        if drs_active:
+            cl *= (1 - self.drs_effect)
+        return cl
 
-
-def downforce_distribution(front_Cl: float, rear_Cl: float,
-                           rho: float, A_front: float, A_rear: float, v: float) -> dict:
-    """
-    Calculate front and rear downforce separately.
-
-    Parameters:
-        front_Cl (float): Front lift coefficient
-        rear_Cl (float): Rear lift coefficient
-        rho (float): Air density [kg/m^3]
-        A_front (float): Front wing area [m^2]
-        A_rear (float): Rear wing area [m^2]
-        v (float): Vehicle speed [m/s]
-
-    Returns:
-        dict: {"front": front_downforce, "rear": rear_downforce, "total": total_downforce}
-    """
-    front = 0.5 * rho * front_Cl * A_front * v**2
-    rear = 0.5 * rho * rear_Cl * A_rear * v**2
-    return {"front": front, "rear": rear, "total": front + rear}
+    def downforce(self, velocity: float, aoa_deg: float, rho: float, drs_active: bool = False) -> float:
+        """Calculate downforce (N) at given velocity (m/s)."""
+        return 0.5 * rho * velocity**2 * self.area * self.cl(aoa_deg, drs_active)
 
 
 # Example usage
+
 if __name__ == "__main__":
-    rho = 1.225
-    Cl = -3.0   # negative for downforce
-    A = 1.6
-    v = 60.0    # m/s (~216 km/h)
+    rho = 1.225  # kg/m³
+    wing = WingElement(area=1.5, base_cl=2.0, aoa_sensitivity=0.05, drs_effect=0.25)
 
-    Df = downforce(rho, Cl, A, v)
-    print(f"Total downforce = {Df:.1f} N")
-
-    dist = downforce_distribution(front_Cl=-1.2, rear_Cl=-1.8,
-                                  rho=1.225, A_front=0.6, A_rear=1.0, v=60)
-    print(f"Front = {dist['front']:.1f} N, Rear = {dist['rear']:.1f} N, Total = {dist['total']:.1f} N")
+    print("=== Downforce Example ===")
+    for v in [100, 200, 300]:  # km/h
+        v_ms = v / 3.6
+        df = wing.downforce(v_ms, aoa_deg=8, rho=rho, drs_active=False)
+        print(f"Velocity {v} km/h → Downforce = {df:.1f} N")
