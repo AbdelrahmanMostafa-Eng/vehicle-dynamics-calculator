@@ -9,6 +9,7 @@ Includes base drag, induced drag, and cooling drag contributions.
 
 from dataclasses import dataclass
 import numpy as np
+import matplotlib.pyplot as plt
 
 @dataclass
 class DragModel:
@@ -37,8 +38,18 @@ if __name__ == "__main__":
     rho = 1.225
     drag_model = DragModel(frontal_area=1.6, cd_base=0.9, cl_total=3.5, aspect_ratio=5.0, cooling_drag=50)
 
-    print("=== Drag Example ===")
-    for v in [100, 200, 300]:  # km/h
-        v_ms = v / 3.6
-        df = drag_model.drag_force(v_ms, rho)
-        print(f"Velocity {v} km/h → Drag Force = {df:.1f} N")
+    velocities = np.linspace(50, 350, 50)  # km/h
+    velocities_ms = velocities / 3.6
+    drag_forces = [drag_model.drag_force(v, rho) for v in velocities_ms]
+
+    # Print default outputs
+    print("Drag Example:")
+    for v in [100, 200, 300]:
+        print(f"Velocity {v} km/h → Drag Force = {drag_model.drag_force(v/3.6, rho):.1f} N")
+
+    # Plot
+    plt.plot(velocities, drag_forces, color="red")
+    plt.xlabel("Velocity (km/h)")
+    plt.ylabel("Drag Force (N)")
+    plt.title("Drag Force vs Speed")
+    plt.show()
