@@ -1,46 +1,42 @@
 #lift_balance.py
 
 """
-Aerodynamic balance calculations
+
+Module for calculating aerodynamic balance in Formula 1.
+Provides downforce distribution and center of pressure (CoP) position.
+
 """
 
-def aero_balance(front_downforce: float, rear_downforce: float) -> float:
-    """
-    Calculate aerodynamic balance (front vs rear).
+from dataclasses import dataclass
 
-    Parameters:
-        front_downforce (float): Front axle downforce [N]
-        rear_downforce (float): Rear axle downforce [N]
+@dataclass
+class AeroBalanceModel:
+    front_cl: float
+    rear_cl: float
+    front_area: float
+    rear_area: float
+    wheelbase: float
 
-    Returns:
-        float: Balance ratio (0 = all rear, 1 = all front)
-    """
-    total = front_downforce + rear_downforce
-    return front_downforce / total if total > 1e-9 else 0.0
+    def downforce_distribution(self, velocity: float, rho: float) -> tuple:
+        """Return front and rear downforce (N) at given velocity (m/s)."""
+        df_front = 0.5 * rho * velocity**2 * self.front_area * self.front_cl
+        df_rear = 0.5 * rho * velocity**2 * self.rear_area * self.rear_cl
+        return df_front, df_rear
 
-
-def balance_shift(balance: float, delta_front: float, delta_rear: float) -> float:
-    """
-    Calculate new balance after aero adjustments.
-
-    Parameters:
-        balance (float): Current balance ratio
-        delta_front (float): Change in front downforce [N]
-        delta_rear (float): Change in rear downforce [N]
-
-    Returns:
-        float: Updated balance ratio
-    """
-    front_new = balance + delta_front
-    rear_new = (1 - balance) + delta_rear
-    total = front_new + rear_new
-    return front_new / total if total > 1e-9 else 0.0
+    def center_of_pressure(self, velocity: float, rho: float) -> float:
+        """Return CoP position (m from front axle)."""
+        df_front, df_rear = self.downforce_distribution(velocity, rho)
+        total = df_front + df_rear
+        return (df_rear / total) * self.wheelbase
 
 
-# Example usage
 if __name__ == "__main__":
-    balance = aero_balance(front_downforce=1200, rear_downforce=1800)
-    print(f"Aero balance = {balance:.2f}")
+    # Example usage
+    rho = 1.225
+    balance = AeroBalanceModel(front_cl=2.0, rear_cl=2.5, front_area=1.5, rear_area=2.0, wheelbase=3.6)
 
-    new_balance = balance_shift(balance, delta_front=100, delta_rear=-50)
-    print(f"Updated balance = {new_balance:.2f}")
+    print("=== Lift Balance Example ===")
+    for v in [100, 200, 300]:  # km/h
+        v_ms = v / 3.6
+        cop = balance.center_of_pressure(v_ms, rho)
+        print(f"Velocity {v} km/h → CoP = {cop:.2f} m from front axle")
