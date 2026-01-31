@@ -9,6 +9,7 @@ Captures ride height sensitivity, rake effects, and diffuser stall behavior.
 
 from dataclasses import dataclass
 import numpy as np
+import matplotlib.pyplot as plt
 
 @dataclass
 class GroundEffectModel:
@@ -31,8 +32,17 @@ class GroundEffectModel:
 if __name__ == "__main__":
     model = GroundEffectModel(base_cl=4.0, decay_rate=15, rake_sensitivity=0.02, stall_threshold=0.05)
 
-    print("=== Ground Effect Example ===")
-    for h in [0.01, 0.03, 0.05, 0.08]:  # meters
-        cl_val = model.cl(h, rake_deg=2.0)
-        print(f"Ride Height {h*1000:.0f} mm → Cl = {cl_val:.3f}")
-        print(f"Ride height {h:.2f} m → Downforce {df:.1f} N")
+    ride_heights = np.linspace(0.01, 0.1, 50)  # meters
+    cl_values = [model.cl(h, rake_deg=2.0) for h in ride_heights]
+
+    # Print default outputs
+    print("Ground Effect Example:")
+    for h in [0.01, 0.03, 0.05, 0.08]:
+        print(f"Ride Height {h*1000:.0f} mm → Cl = {model.cl(h, rake_deg=2.0):.3f}")
+
+    # Plot
+    plt.plot(ride_heights*1000, cl_values, color="green")
+    plt.xlabel("Ride Height (mm)")
+    plt.ylabel("Lift Coefficient (Cl)")
+    plt.title("Ground Effect Cl vs Ride Height")
+    plt.show()
