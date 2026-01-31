@@ -9,6 +9,7 @@ Includes support for angle of attack (AoA), DRS effects, and multi-element wings
 
 from dataclasses import dataclass
 import numpy as np
+import matplotlib.pyplot as plt
 
 @dataclass
 class WingElement:
@@ -34,9 +35,23 @@ class WingElement:
 if __name__ == "__main__":
     rho = 1.225  # kg/m³
     wing = WingElement(area=1.5, base_cl=2.0, aoa_sensitivity=0.05, drs_effect=0.25)
+    
+    velocities = np.linspace(50, 350, 50)  # km/h
+    velocities_ms = velocities / 3.6
 
-    print("=== Downforce Example ===")
-    for v in [100, 200, 300]:  # km/h
-        v_ms = v / 3.6
-        df = wing.downforce(v_ms, aoa_deg=8, rho=rho, drs_active=False)
+    df_no_drs = [wing.downforce(v, aoa_deg=8, rho=rho, drs_active=False) for v in velocities_ms]
+    df_drs = [wing.downforce(v, aoa_deg=8, rho=rho, drs_active=True) for v in velocities_ms]
+
+    # Print default outputs
+    print("Downforce Example")
+    for v, df in zip([100, 200, 300], [wing.downforce(v/3.6, 8, rho, False) for v in [100, 200, 300]]):
         print(f"Velocity {v} km/h → Downforce = {df:.1f} N")
+
+    # Plot
+    plt.plot(velocities, df_no_drs, label="Wing Downforce (DRS Off)")
+    plt.plot(velocities, df_drs, label="Wing Downforce (DRS On)", linestyle="--")
+    plt.xlabel("Velocity (km/h)")
+    plt.ylabel("Downforce (N)")
+    plt.title("Downforce vs Speed")
+    plt.legend()
+    plt.show()
