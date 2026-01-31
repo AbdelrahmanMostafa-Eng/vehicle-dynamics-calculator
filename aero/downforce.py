@@ -43,7 +43,7 @@ if __name__ == "__main__":
     df_drs = [wing.downforce(v, aoa_deg=8, rho=rho, drs_active=True) for v in velocities_ms]
 
     # Print default outputs
-    print("Downforce Example")
+    print("Downforce Example:")
     for v, df in zip([100, 200, 300], [wing.downforce(v/3.6, 8, rho, False) for v in [100, 200, 300]]):
         print(f"Velocity {v} km/h → Downforce = {df:.1f} N")
 
