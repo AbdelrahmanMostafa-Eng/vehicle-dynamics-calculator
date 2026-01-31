@@ -8,6 +8,8 @@ Provides downforce distribution and center of pressure (CoP) position.
 """
 
 from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
 @dataclass
 class AeroBalanceModel:
@@ -29,14 +31,25 @@ class AeroBalanceModel:
         total = df_front + df_rear
         return (df_rear / total) * self.wheelbase
 
+# Example usage
 
-if __name__ == "__main__":
-    # Example usage
+if __name__ == "__main__": 
     rho = 1.225
     balance = AeroBalanceModel(front_cl=2.0, rear_cl=2.5, front_area=1.5, rear_area=2.0, wheelbase=3.6)
+    
+    velocities = np.linspace(50, 350, 50)  # km/h
+    velocities_ms = velocities / 3.6
+    cop_positions = [balance.center_of_pressure(v, rho) for v in velocities_ms]
 
-    print("=== Lift Balance Example ===")
-    for v in [100, 200, 300]:  # km/h
-        v_ms = v / 3.6
-        cop = balance.center_of_pressure(v_ms, rho)
-        print(f"Velocity {v} km/h → CoP = {cop:.2f} m from front axle")
+
+    # Print default outputs
+    print("Lift Balance Example:")
+    for v in [100, 200, 300]:
+        print(f"Velocity {v} km/h → CoP = {balance.center_of_pressure(v/3.6, rho):.2f} m from front axle")
+
+    # Plot
+    plt.plot(velocities, cop_positions, color="purple")
+    plt.xlabel("Velocity (km/h)")
+    plt.ylabel("CoP Position (m from front axle)")
+    plt.title("Center of Pressure vs Speed")
+    plt.show()
