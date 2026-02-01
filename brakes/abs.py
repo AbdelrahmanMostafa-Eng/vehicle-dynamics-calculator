@@ -24,7 +24,9 @@ class ABSModel:
             reduction = self.modulation_gain * (slip_ratio - self.slip_optimal)
             return max_brake_force * max(0.0, 1 - reduction)
 
+
 # Example usage
+
 if __name__ == "__main__":
     abs_model = ABSModel(slip_optimal=0.15, modulation_gain=2.0)
     slip_ratios = np.linspace(0, 0.4, 50)
