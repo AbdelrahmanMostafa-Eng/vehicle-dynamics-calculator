@@ -1,39 +1,39 @@
 #brake_migration.py
 
 """
-Dynamic brake bias adjustment
+
+Module for modeling brake migration in Formula 1.
+Brake migration shifts braking force from rear to front as pedal pressure increases.
+
 """
 
-def brake_migration(initial_bias: float, migration_rate: float,
-                    brake_pressure: float, max_pressure: float) -> float:
-    """
-    Calculate dynamic brake bias under braking.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        initial_bias (float): Static front brake bias fraction (0–1)
-        migration_rate (float): Bias shift rate per unit brake pressure [-]
-        brake_pressure (float): Current brake pressure [bar]
-        max_pressure (float): Maximum brake pressure [bar]
+@dataclass
+class BrakeMigrationModel:
+    base_bias: float       # initial rear bias fraction
+    migration_rate: float  # rate of migration per unit pedal pressure
 
-    Returns:
-        float: Adjusted front brake bias fraction (0–1)
-    """
-    # Normalize brake pressure
-    pressure_fraction = brake_pressure / max_pressure
-
-    # Bias shift proportional to brake pressure
-    migrated_bias = initial_bias - migration_rate * pressure_fraction
-
-    # Clamp to [0, 1]
-    return max(0.0, min(1.0, migrated_bias))
+    def bias(self, pedal_pressure: float) -> float:
+        """Return rear brake bias fraction at given pedal pressure (0–1)."""
+        return max(0.0, self.base_bias - self.migration_rate * pedal_pressure)
 
 
-# Example usage
+# Example usage and plotting
+
 if __name__ == "__main__":
-    initial = 0.60       # 60% front bias
-    migration_rate = 0.05
-    brake_pressure = 80  # bar
-    max_pressure = 100   # bar
+    model = BrakeMigrationModel(base_bias=0.55, migration_rate=0.2)
+    pressures = np.linspace(0, 1, 50)
+    biases = [model.bias(p) for p in pressures]
 
-    bias = brake_migration(initial, migration_rate, brake_pressure, max_pressure)
-    print(f"Dynamic brake bias = {bias:.3f} (fraction front)")
+    print("Brake Migration Example:")
+    for p in [0.2, 0.5, 0.8]:
+        print(f"Pedal Pressure {p:.1f} → Rear Bias = {model.bias(p):.2f}")
+
+    plt.plot(pressures*100, biases, color="blue")
+    plt.xlabel("Pedal Pressure (%)")
+    plt.ylabel("Rear Brake Bias Fraction")
+    plt.title("Brake Migration vs Pedal Pressure")
+    plt.show()
