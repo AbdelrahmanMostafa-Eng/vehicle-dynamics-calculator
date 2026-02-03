@@ -22,7 +22,7 @@ class BrakeBiasModel:
         return f_front, f_rear
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     model = BrakeBiasModel(bias_front=0.58)
