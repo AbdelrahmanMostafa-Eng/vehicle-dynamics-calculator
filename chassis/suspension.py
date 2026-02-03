@@ -31,7 +31,7 @@ class SuspensionModel:
         """Calculate lateral load transfer (N)."""
         return (lateral_accel * self.sprung_mass * 9.81 * cg_height) / track_width
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     suspension = SuspensionModel(spring_rate=60000, damping_coeff=4500, unsprung_mass=40, sprung_mass=300)
