@@ -30,7 +30,7 @@ class WingElement:
         return 0.5 * rho * velocity**2 * self.area * self.cl(aoa_deg, drs_active)
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     rho = 1.225  # kg/m³
