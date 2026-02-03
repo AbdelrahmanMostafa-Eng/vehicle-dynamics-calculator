@@ -30,7 +30,7 @@ class ChassisGeometry:
         """Calculate anti-squat percentage based on swing arm angle and geometry."""
         return np.tan(np.radians(swing_arm_angle)) * (self.cg_height / self.wheelbase) * 100
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     geometry = ChassisGeometry(track_width=1.6, cg_height=0.35, suspension_arm_angle=10, wheelbase=3.6)
