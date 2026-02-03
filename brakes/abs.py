@@ -25,7 +25,7 @@ class ABSModel:
             return max_brake_force * max(0.0, 1 - reduction)
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     abs_model = ABSModel(slip_optimal=0.15, modulation_gain=2.0)
