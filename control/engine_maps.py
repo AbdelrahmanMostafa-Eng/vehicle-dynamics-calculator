@@ -1,60 +1,47 @@
 #engine_maps.py
 
 """
-Engine power delivery modes
+
+Module for modeling engine torque and fuel consumption maps in Formula 1.
+
 """
 
-def engine_map(base_torque: float, mode: str) -> float:
-    """
-    Adjust engine torque based on selected map.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        base_torque (float): Base engine torque [Nm]
-        mode (str): Engine mode ("qualifying", "race", "conserve", "wet")
+@dataclass
+class EngineMap:
+    max_torque: float      # Nm
+    efficiency_peak: float # optimal efficiency RPM
+    fuel_rate_base: float  # base fuel rate (g/s)
 
-    Returns:
-        float: Adjusted engine torque [Nm]
-    """
-    mode = mode.lower()
-    if mode == "qualifying":
-        return base_torque * 1.10   # extra aggressive
-    elif mode == "race":
-        return base_torque * 1.00   # balanced
-    elif mode == "conserve":
-        return base_torque * 0.85   # fuel/ERS saving
-    elif mode == "wet":
-        return base_torque * 0.75   # smoother delivery
-    else:
-        return base_torque
+    def torque(self, rpm: float) -> float:
+        """Return torque at given RPM."""
+        return self.max_torque * np.exp(-((rpm - self.efficiency_peak)/4000)**2)
+
+    def fuel_rate(self, rpm: float, throttle: float) -> float:
+        """Return fuel consumption rate at given RPM and throttle (0–1)."""
+        return self.fuel_rate_base * (1 + (rpm/10000)) * throttle
 
 
-def fuel_consumption(base_rate: float, mode: str) -> float:
-    """
-    Adjust fuel consumption rate based on engine mode.
+# Example usage and plotting
 
-    Parameters:
-        base_rate (float): Base fuel consumption [kg/s]
-        mode (str): Engine mode
-
-    Returns:
-        float: Adjusted fuel consumption [kg/s]
-    """
-    mode = mode.lower()
-    if mode == "qualifying":
-        return base_rate * 1.20
-    elif mode == "race":
-        return base_rate * 1.00
-    elif mode == "conserve":
-        return base_rate * 0.80
-    elif mode == "wet":
-        return base_rate * 0.90
-    else:
-        return base_rate
-
-
-# Example usage
 if __name__ == "__main__":
-    tq = engine_map(base_torque=300.0, mode="qualifying")
-    fc = fuel_consumption(base_rate=0.08, mode="qualifying")
+    engine = EngineMap(max_torque=800, efficiency_peak=11000, fuel_rate_base=0.5)
+    rpms = np.linspace(8000, 15000, 100)
+    torques = [engine.torque(r) for r in rpms]
+    fuel_rates = [engine.fuel_rate(r, throttle=0.8) for r in rpms]
 
-    print(f"Qualifying mode → Torque = {tq:.1f} Nm, Fuel rate = {fc:.3f} kg/s")
+    print("Engine Map Example:")
+    print(f"Torque at 11000 RPM → {engine.torque(11000):.1f} Nm")
+    print(f"Fuel Rate at 12000 RPM, 80% throttle → {engine.fuel_rate(12000, 0.8):.2f} g/s")
+
+    plt.figure(figsize=(10,5))
+    plt.plot(rpms, torques, label="Torque Curve")
+    plt.plot(rpms, fuel_rates, label="Fuel Rate (80% throttle)")
+    plt.xlabel("Engine Speed (RPM)")
+    plt.ylabel("Torque (Nm) / Fuel Rate (g/s)")
+    plt.title("Engine Torque & Fuel Map")
+    plt.legend()
+    plt.show()
