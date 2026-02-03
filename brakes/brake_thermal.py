@@ -28,7 +28,7 @@ class BrakeThermalModel:
         return temp_new
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     model = BrakeThermalModel(mass=5.0, specific_heat=500, cooling_coeff=0.02, ambient_temp=25)
