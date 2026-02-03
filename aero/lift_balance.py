@@ -31,7 +31,7 @@ class AeroBalanceModel:
         total = df_front + df_rear
         return (df_rear / total) * self.wheelbase
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__": 
     rho = 1.225
