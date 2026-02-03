@@ -32,7 +32,7 @@ class DragModel:
         return 0.5 * rho * velocity**2 * self.frontal_area * self.total_cd() + self.cooling_drag
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     rho = 1.225
