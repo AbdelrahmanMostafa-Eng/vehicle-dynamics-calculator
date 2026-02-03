@@ -27,7 +27,7 @@ class GroundEffectModel:
         return self.base_cl * decay + rake_effect
 
 
-# Example usage
+# Example usage and plotting
 
 if __name__ == "__main__":
     model = GroundEffectModel(base_cl=4.0, decay_rate=15, rake_sensitivity=0.02, stall_threshold=0.05)
