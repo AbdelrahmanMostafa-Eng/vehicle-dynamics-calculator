@@ -1,62 +1,43 @@
 #altitude.py
 
 """
-altitude.py — Altitude effects on air density and performance
+
+Module for modeling the effect of altitude on air density and vehicle performance.
+
 """
 
-import math
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-def air_density_at_altitude(altitude: float, temp: float = 15.0) -> float:
-    """
-    Calculate air density at a given altitude using ISA model.
+@dataclass
+class AltitudeModel:
+    temp0: float = 288.15   # Sea-level standard temperature (K)
+    pressure0: float = 101325  # Sea-level pressure (Pa)
+    lapse_rate: float = 0.0065 # Temperature lapse rate (K/m)
+    R: float = 287.05       # Specific gas constant for dry air (J/kg*K)
+    g: float = 9.81         # Gravity (m/s²)
 
-    Parameters:
-        altitude (float): Altitude above sea level [m]
-        temp (float): Sea-level temperature [°C] (default 15 °C)
-
-    Returns:
-        float: Air density [kg/m^3]
-    """
-    # Constants
-    T0 = temp + 273.15       # sea-level temperature [K]
-    P0 = 101325.0            # sea-level pressure [Pa]
-    L = 0.0065               # temperature lapse rate [K/m]
-    R = 287.05               # specific gas constant [J/(kg·K)]
-    g = 9.80665              # gravity [m/s^2]
-
-    # Temperature at altitude
-    T = T0 - L * altitude
-
-    # Pressure at altitude (barometric formula)
-    P = P0 * (1 - (L * altitude) / T0) ** (g / (R * L))
-
-    # Density
-    rho = P / (R * T)
-    return rho
+    def air_density(self, altitude: float) -> float:
+        """Return air density (kg/m³) at given altitude (m)."""
+        temp = self.temp0 - self.lapse_rate * altitude
+        pressure = self.pressure0 * (temp / self.temp0) ** (self.g / (self.R * self.lapse_rate))
+        return pressure / (self.R * temp)
 
 
-def engine_power_correction(base_power: float, altitude: float) -> float:
-    """
-    Correct engine power for altitude effects.
+# Example usage and plotting
 
-    Parameters:
-        base_power (float): Sea-level engine power [kW]
-        altitude (float): Altitude above sea level [m]
-
-    Returns:
-        float: Corrected engine power [kW]
-    """
-    rho0 = air_density_at_altitude(0.0)
-    rho = air_density_at_altitude(altitude)
-    return base_power * (rho / rho0)
-
-
-# Example usage
 if __name__ == "__main__":
-    alt = 2000.0  # meters
-    rho = air_density_at_altitude(alt)
-    print(f"Air density at {alt:.0f} m = {rho:.3f} kg/m^3")
+    model = AltitudeModel()
+    altitudes = np.linspace(0, 3000, 50)
+    densities = [model.air_density(h) for h in altitudes]
 
-    base_power = 600.0  # kW
-    corrected = engine_power_correction(base_power, alt)
-    print(f"Engine power at {alt:.0f} m = {corrected:.1f} kW")
+    print("Altitude Example:")
+    for h in [0, 1000, 2000]:
+        print(f"Altitude {h} m → Air Density = {model.air_density(h):.3f} kg/m³")
+
+    plt.plot(altitudes, densities, color="blue")
+    plt.xlabel("Altitude (m)")
+    plt.ylabel("Air Density (kg/m³)")
+    plt.title("Air Density vs Altitude")
+    plt.show()
