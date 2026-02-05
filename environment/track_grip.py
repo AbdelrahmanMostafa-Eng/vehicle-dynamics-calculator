@@ -1,53 +1,45 @@
 #track_grip.py
 
 """
-track_grip.py — Track surface grip modeling
+
+Module for modeling track grip coefficient based on surface conditions and rubber buildup.
+
 """
 
-def grip_coefficient(base_grip: float, condition: str) -> float:
-    """
-    Adjust grip coefficient based on track condition.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        base_grip (float): Base grip coefficient [-]
-        condition (str): Track condition ("dry", "wet", "rubbered", "dusty")
+@dataclass
+class TrackGripModel:
+    base_mu: float       # Base friction coefficient
+    rubber_gain: float   # Grip increase per lap
+    wet_penalty: float   # Grip reduction factor when wet
 
-    Returns:
-        float: Adjusted grip coefficient [-]
-    """
-    condition = condition.lower()
-    if condition == "dry":
-        return base_grip
-    elif condition == "wet":
-        return base_grip * 0.6
-    elif condition == "rubbered":
-        return base_grip * 1.1
-    elif condition == "dusty":
-        return base_grip * 0.8
-    else:
-        return base_grip
+    def grip(self, laps: int, wet: bool = False) -> float:
+        """Return grip coefficient after given laps, considering wet conditions."""
+        mu = self.base_mu + self.rubber_gain * laps
+        if wet:
+            mu *= (1 - self.wet_penalty)
+        return mu
 
 
-def combined_grip(base_grip: float, condition: str, temp_effect: float) -> float:
-    """
-    Combine track condition and temperature effect.
+# Example usage and plotting
 
-    Parameters:
-        base_grip (float): Base grip coefficient [-]
-        condition (str): Track condition
-        temp_effect (float): Grip multiplier from temperature
-
-    Returns:
-        float: Final grip coefficient [-]
-    """
-    return grip_coefficient(base_grip, condition) * temp_effect
-
-
-# Example usage
 if __name__ == "__main__":
-    base = 1.2
-    condition = "wet"
-    temp_effect = 0.95
+    model = TrackGripModel(base_mu=1.4, rubber_gain=0.01, wet_penalty=0.4)
+    laps = np.arange(0, 50)
+    grip_dry = [model.grip(l, wet=False) for l in laps]
+    grip_wet = [model.grip(l, wet=True) for l in laps]
 
-    g = combined_grip(base, condition, temp_effect)
-    print(f"Grip coefficient under {condition} = {g:.3f}")
+    print("Track Grip Example:")
+    print(f"Grip after 10 laps (dry) → {model.grip(10, False):.2f}")
+    print(f"Grip after 10 laps (wet) → {model.grip(10, True):.2f}")
+
+    plt.plot(laps, grip_dry, label="Dry Track")
+    plt.plot(laps, grip_wet, label="Wet Track", linestyle="--")
+    plt.xlabel("Laps")
+    plt.ylabel("Grip Coefficient (μ)")
+    plt.title("Track Grip Evolution")
+    plt.legend()
+    plt.show()
