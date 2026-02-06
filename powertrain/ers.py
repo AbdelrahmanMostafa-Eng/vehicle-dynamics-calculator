@@ -1,67 +1,58 @@
 #ers.py
 
 """
-Energy Recovery System (ERS) modeling
+
+Module for modeling Energy Recovery System (ERS) in Formula 1.
+Includes harvesting and deployment of electrical energy.
+
 """
 
-class ERS:
-    def __init__(self, capacity_kJ: float, efficiency: float = 0.9):
-        """
-        Initialize ERS system.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-        Parameters:
-            capacity_kJ (float): Maximum energy storage capacity [kJ]
-            efficiency (float): Harvest/deploy efficiency (default 0.9)
-        """
-        self.capacity = capacity_kJ
-        self.efficiency = efficiency
-        self.energy = 0.0  # current stored energy [kJ]
+@dataclass
+class ERSModel:
+    capacity: float       # kJ
+    efficiency: float     # harvesting efficiency (0–1)
+    deploy_rate: float    # kW
 
-    def harvest(self, input_energy_kJ: float) -> float:
-        """
-        Harvest energy into ERS.
+    def harvest(self, braking_energy: float) -> float:
+        """Harvest energy from braking (kJ)."""
+        return min(braking_energy * self.efficiency, self.capacity)
 
-        Parameters:
-            input_energy_kJ (float): Energy harvested [kJ]
-
-        Returns:
-            float: Actual stored energy [kJ]
-        """
-        stored = input_energy_kJ * self.efficiency
-        self.energy = min(self.energy + stored, self.capacity)
-        return self.energy
-
-    def deploy(self, request_kJ: float) -> float:
-        """
-        Deploy energy from ERS.
-
-        Parameters:
-            request_kJ (float): Requested energy [kJ]
-
-        Returns:
-            float: Delivered energy [kJ]
-        """
-        available = min(request_kJ, self.energy)
-        delivered = available * self.efficiency
-        self.energy -= available
-        return delivered
-
-    def state_of_charge(self) -> float:
-        """
-        Get current state of charge (SOC).
-
-        Returns:
-            float: SOC as fraction of capacity [0–1]
-        """
-        return self.energy / self.capacity if self.capacity > 0 else 0.0
+    def deploy(self, duration: float) -> float:
+        """Deploy energy over given duration (s)."""
+        energy_used = self.deploy_rate * duration
+        return min(energy_used, self.capacity)
 
 
-# Example usage
+# Example usage and plotting
+
 if __name__ == "__main__":
-    ers = ERS(capacity_kJ=4000, efficiency=0.9)
+    ers = ERSModel(capacity=4000, efficiency=0.7, deploy_rate=120)
+    braking_events = np.linspace(0, 6000, 50)
+    harvested = [ers.harvest(e) for e in braking_events]
 
-    ers.harvest(1000)
-    print(f"Stored energy = {ers.energy:.1f} kJ, SOC = {ers.state_of_charge():.2f}")
+    times = np.linspace(0, 40, 50)
+    deployed = [ers.deploy(t) for t in times]
 
-    delivered = ers.deploy(500)
-    print(f"Delivered energy = {delivered:.1f} kJ, Remaining = {ers.energy:.1f} kJ")
+    print("ERS Example:")
+    print(f"Harvest from 3000 kJ braking → {ers.harvest(3000):.1f} kJ")
+    print(f"Deploy over 20s → {ers.deploy(20):.1f} kJ")
+
+    plt.figure(figsize=(12,5))
+    plt.subplot(1,2,1)
+    plt.plot(braking_events, harvested, color="green")
+    plt.xlabel("Braking Energy (kJ)")
+    plt.ylabel("Harvested Energy (kJ)")
+    plt.title("ERS Harvesting")
+
+    plt.subplot(1,2,2)
+    plt.plot(times, deployed, color="orange")
+    plt.xlabel("Deployment Duration (s)")
+    plt.ylabel("Deployed Energy (kJ)")
+    plt.title("ERS Deployment")
+
+    plt.tight_layout()
+    plt.show()
