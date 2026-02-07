@@ -1,46 +1,39 @@
 #lap_simulation.py
 
 """
-Single lap performance model
+
+Module for simulating lap times in Formula 1.
+Includes speed profile, braking zones, and lap time estimation.
+
 """
 
-def lap_time(distance: float, avg_speed: float) -> float:
-    """
-    Estimate lap time.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        distance (float): Lap length [m]
-        avg_speed (float): Average speed [m/s]
+@dataclass
+class LapSimulation:
+    track_length: float   # m
+    avg_speed: float      # km/h
+    braking_zones: int    # number of braking zones
 
-    Returns:
-        float: Lap time [s]
-    """
-    if avg_speed <= 0:
-        raise ValueError("Average speed must be positive")
-    return distance / avg_speed
-
-
-def fuel_burn(fuel_rate: float, lap_time: float) -> float:
-    """
-    Estimate fuel consumed in one lap.
-
-    Parameters:
-        fuel_rate (float): Fuel consumption rate [kg/s]
-        lap_time (float): Lap time [s]
-
-    Returns:
-        float: Fuel consumed [kg]
-    """
-    return fuel_rate * lap_time
+    def lap_time(self) -> float:
+        """Estimate lap time (s)."""
+        return self.track_length / (self.avg_speed / 3.6)
 
 
-# Example usage
+# Example usage and visualization
+
 if __name__ == "__main__":
-    distance = 5300.0   # m
-    avg_speed = 65.0    # m/s (~234 km/h)
-    rate = 0.08         # kg/s
+    sim = LapSimulation(track_length=5300, avg_speed=210, braking_zones=12)
+    speeds = np.linspace(150, 250, 50)
+    lap_times = [LapSimulation(5300, v, 12).lap_time() for v in speeds]
 
-    t = lap_time(distance, avg_speed)
-    fuel = fuel_burn(rate, t)
+    print("Lap Simulation Example:")
+    print(f"Lap Time at 210 km/h → {sim.lap_time():.1f} s")
 
-    print(f"Lap time = {t:.1f} s, Fuel burn = {fuel:.2f} kg")
+    plt.plot(speeds, lap_times, color="blue")
+    plt.xlabel("Average Speed (km/h)")
+    plt.ylabel("Lap Time (s)")
+    plt.title("Lap Time vs Average Speed")
+    plt.show()
