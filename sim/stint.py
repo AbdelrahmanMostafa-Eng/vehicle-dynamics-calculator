@@ -1,58 +1,39 @@
 #stint.py
 
 """
-Multi-lap tire & fuel management
+
+Module for simulating tire stints in Formula 1.
+Includes degradation, lap time evolution, and stint length.
+
 """
 
-def tire_degradation(initial_grip: float, laps: int, degradation_rate: float) -> float:
-    """
-    Estimate grip after a number of laps.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        initial_grip (float): Starting grip coefficient [-]
-        laps (int): Number of laps completed
-        degradation_rate (float): Grip loss per lap [-]
+@dataclass
+class StintSimulation:
+    base_lap_time: float   # s
+    degradation_rate: float # s/lap
+    max_laps: int
 
-    Returns:
-        float: Grip coefficient after laps [-]
-    """
-    grip = initial_grip - degradation_rate * laps
-    return max(0.0, grip)  # clamp to non-negative
-
-
-def fuel_mass(initial_fuel: float, fuel_per_lap: float, laps: int) -> float:
-    """
-    Estimate remaining fuel after a number of laps.
-
-    Parameters:
-        initial_fuel (float): Starting fuel mass [kg]
-        fuel_per_lap (float): Fuel consumed per lap [kg]
-        laps (int): Number of laps completed
-
-    Returns:
-        float: Remaining fuel mass [kg]
-    """
-    fuel = initial_fuel - fuel_per_lap * laps
-    return max(0.0, fuel)
+    def lap_time(self, lap: int) -> float:
+        """Return lap time at given lap number."""
+        return self.base_lap_time + self.degradation_rate * lap
 
 
-def stint_summary(initial_grip: float, initial_fuel: float,
-                  laps: int, degradation_rate: float,
-                  fuel_per_lap: float) -> dict:
-    """
-    Summarize tire and fuel status after a stint.
+# Example usage and visualization
 
-    Returns:
-        dict: {"final_grip": grip, "remaining_fuel": fuel}
-    """
-    grip = tire_degradation(initial_grip, laps, degradation_rate)
-    fuel = fuel_mass(initial_fuel, fuel_per_lap, laps)
-    return {"final_grip": grip, "remaining_fuel": fuel}
-
-
-# Example usage
 if __name__ == "__main__":
-    summary = stint_summary(initial_grip=1.2, initial_fuel=100.0,
-                            laps=15, degradation_rate=0.02,
-                            fuel_per_lap=2.5)
-    print(f"After 15 laps → Grip = {summary['final_grip']:.2f}, Fuel = {summary['remaining_fuel']:.1f} kg")
+    stint = StintSimulation(base_lap_time=80.0, degradation_rate=0.15, max_laps=30)
+    laps = np.arange(1, stint.max_laps+1)
+    times = [stint.lap_time(l) for l in laps]
+
+    print("Stint Simulation Example:")
+    print(f"Lap Time at Lap 10 → {stint.lap_time(10):.2f} s")
+
+    plt.plot(laps, times, color="red")
+    plt.xlabel("Lap Number")
+    plt.ylabel("Lap Time (s)")
+    plt.title("Lap Time Evolution During Stint")
+    plt.show()
