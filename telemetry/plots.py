@@ -1,80 +1,56 @@
 #plots.py
 
 """
-Standalone telemetry visualization
+
+Module for visualizing telemetry data in Formula 1.
+
 """
 
-import random
 import matplotlib.pyplot as plt
 
-# ---------------- Telemetry generator ----------------
-def generate_lap_data(laps: int, lap_distance: float) -> list:
-    """
-    Generate synthetic telemetry data for multiple laps.
-    """
-    data = []
-    for lap in range(1, laps + 1):
-        avg_speed = random.uniform(60, 70)  # m/s
-        lap_time = lap_distance / avg_speed
-        fuel_used = random.uniform(2.3, 2.7)  # kg
-        tire_wear = random.uniform(0.01, 0.03) * lap
+class TelemetryPlots:
 
-        data.append({
-            "lap": lap,
-            "avg_speed": avg_speed,
-            "lap_time": lap_time,
-            "fuel_used": fuel_used,
-            "tire_wear": tire_wear
-        })
-    return data
+    @staticmethod
+    def plot_speed(time, speed):
+        plt.plot(time, speed, color="blue")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Speed (km/h)")
+        plt.title("Speed Trace")
+        plt.show()
 
+    @staticmethod
+    def plot_inputs(time, throttle, brake):
+        plt.plot(time, throttle, label="Throttle", color="green")
+        plt.plot(time, brake, label="Brake", color="red")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Input Level")
+        plt.title("Driver Inputs")
+        plt.legend()
+        plt.show()
 
-# ---------------- Plot functions ----------------
-def plot_lap_times(telemetry: list):
-    laps = [d["lap"] for d in telemetry]
-    times = [d["lap_time"] for d in telemetry]
-
-    plt.figure(figsize=(8, 4))
-    plt.plot(laps, times, marker="o", label="Lap time [s]")
-    plt.xlabel("Lap")
-    plt.ylabel("Time [s]")
-    plt.title("Lap Times")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    @staticmethod
+    def plot_gears(time, gear):
+        plt.step(time, gear, where="post", color="purple")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Gear")
+        plt.title("Gear Trace")
+        plt.show()
 
 
-def plot_fuel_usage(telemetry: list):
-    laps = [d["lap"] for d in telemetry]
-    fuel = [d["fuel_used"] for d in telemetry]
+# Plotting
 
-    plt.figure(figsize=(8, 4))
-    plt.bar(laps, fuel, label="Fuel used [kg]")
-    plt.xlabel("Lap")
-    plt.ylabel("Fuel [kg]")
-    plt.title("Fuel Usage per Lap")
-    plt.legend()
-    plt.show()
-
-
-def plot_tire_wear(telemetry: list):
-    laps = [d["lap"] for d in telemetry]
-    wear = [d["tire_wear"] for d in telemetry]
-
-    plt.figure(figsize=(8, 4))
-    plt.plot(laps, wear, marker="x", color="red", label="Tire wear [-]")
-    plt.xlabel("Lap")
-    plt.ylabel("Wear")
-    plt.title("Tire Wear Progression")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-
-# ---------------- Example run ----------------
 if __name__ == "__main__":
-    telemetry = generate_lap_data(10, lap_distance=5300)
+    import numpy as np
+    # Example synthetic data
+    time = np.linspace(0, 90, 500)
+    speed = 300 * (np.sin(2*np.pi*time/90)*0.4 + 0.6)
+    throttle = np.clip(np.sin(4*np.pi*time/90), 0, 1)
+    brake = np.clip(-np.sin(4*np.pi*time/90), 0, 1)
+    gear = np.floor(1 + 6*(speed/300)).astype(int)
 
-    plot_lap_times(telemetry)
-    plot_fuel_usage(telemetry)
-    plot_tire_wear(telemetry)
+    print("Telemetry Plots Example:")
+    print("Plotting speed, inputs, and gear traces...")
+
+    TelemetryPlots.plot_speed(time, speed)
+    TelemetryPlots.plot_inputs(time, throttle, brake)
+    TelemetryPlots.plot_gears(time, gear)
