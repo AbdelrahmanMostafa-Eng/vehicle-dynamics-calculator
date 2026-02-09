@@ -1,41 +1,47 @@
 #tire_heat.py
 
 """
-tire_heat.py - Tire thermal modeling
 
-Models tire temperature changes due to frictional heating and cooling effects.
+Module for modeling tire heat buildup in Formula 1.
+Includes heating from friction and cooling effects.
+
 """
 
-def tire_temperature(prev_temp: float, speed: float, Fx: float, Fy: float,
-                     ambient_temp: float = 25.0, dt: float = 1.0) -> float:
-    """
-    Calculate tire surface temperature at the next timestep.
+from dataclasses import dataclass
+import numpy as np
+import matplotlib.pyplot as plt
 
-    Parameters:
-        prev_temp (float): Previous tire temperature [°C]
-        speed (float): Vehicle speed [m/s]
-        Fx (float): Longitudinal force [N]
-        Fy (float): Lateral force [N]
-        ambient_temp (float): Ambient air temperature [°C]
-        dt (float): Time step [s]
+@dataclass
+class TireHeatModel:
+    mass: float           # kg
+    specific_heat: float  # J/(kg*K)
+    cooling_coeff: float  # cooling rate
+    ambient_temp: float   # °C
 
-    Returns:
-        float: Updated tire temperature [°C]
-    """
-    # Heat generation proportional to friction work
-    heat_gen = 0.0005 * (abs(Fx) + abs(Fy)) * speed
-
-    # Cooling proportional to difference from ambient
-    cooling = 0.01 * (prev_temp - ambient_temp)
-
-    # Net temperature change
-    new_temp = prev_temp + (heat_gen - cooling) * dt
-    return new_temp
+    def temp_change(self, friction_power: float, duration: float, temp: float) -> float:
+        """Return new tire temperature after given duration (s)."""
+        heat_gain = (friction_power * duration) / (self.mass * self.specific_heat)
+        cooling = self.cooling_coeff * (temp - self.ambient_temp) * duration
+        return temp + heat_gain - cooling
 
 
-# Example usage
+# Example usage and plotting
+
 if __name__ == "__main__":
-    temp = 80.0  # initial °C
-    for t in range(1, 6):
-        temp = tire_temperature(temp, speed=30, Fx=2000, Fy=1500, ambient_temp=25, dt=1.0)
-        print(f"Time {t}s: Tire temp = {temp:.2f} °C")
+    model = TireHeatModel(mass=20, specific_heat=1800, cooling_coeff=0.02, ambient_temp=25)
+    time = np.linspace(0, 60, 100)
+    temps = []
+    temp = 80
+    for t in time:
+        friction_power = 5000 if 10 < t < 30 else 0
+        temp = model.temp_change(friction_power, 0.6, temp)
+        temps.append(temp)
+
+    print("Tire Heat Example:")
+    print(f"Final Temp after 60s → {temps[-1]:.1f} °C")
+
+    plt.plot(time, temps, color="orange")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Tire Temperature (°C)")
+    plt.title("Tire Temperature Evolution")
+    plt.show()
